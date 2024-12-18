@@ -33,15 +33,21 @@ jobs:
         node-version: 18
 
     - name: Install Dependencies
-      run: npm install    
+      run: npm install   
 
-    # Step 3: Build and Run the Docker Containers
+    # Step 3: Add Docker Group (fix for missing group error)
+    - name: Add docker group to the container
+      run: |
+        sudo groupadd docker || true
+        sudo usermod -aG docker $USER  
+
+    # Step 4: Build and Run the Docker Containers
     - name: Build and start Docker containers
       run: |
         docker-compose up --build -d
         docker-compose ps
 
-    # Step 4: Wait for Application to be Ready
+    # Step 5: Wait for Application to be Ready
     - name: Wait for the application to be ready
       run: |
         until curl -s http://localhost:8090 > /dev/null; do
@@ -50,7 +56,7 @@ jobs:
         done
         echo "App is ready!"
 
-    # Step 5: Run Cypress Tests
+    # Step 6: Run Cypress Tests
     - name: Run Cypress tests
       run: |
         npm ci
@@ -59,7 +65,7 @@ jobs:
       env:
         CYPRESS_BASE_URL: http://localhost:8090
 
-    # Step 6: Tear Down Docker Containers
+    # Step 7: Tear Down Docker Containers
     - name: Stop Docker containers
       if: always()
       run: docker-compose down
