@@ -1,0 +1,65 @@
+name: Run Cypress Tests on the Hosted Docker Application
+
+on:
+  # i want to manually trigger the workflow
+  workflow_dispatch:
+
+jobs:
+  cypress-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:20.10.24
+        options: >-
+          --privileged
+          --group-add docker
+        ports:
+          - 8090:8090 # Application port
+        env:
+          DOCKER_BUILDKIT: 1
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+
+    steps:
+    # Step 1: Checkout Code
+    - name: Checkout Project Repository
+      uses: actions/checkout@v3
+
+    # Step 2: Set up Node.js for Cypress
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install Dependencies
+      run: npm install    
+
+    # Step 3: Build and Run the Docker Containers
+    - name: Build and start Docker containers
+      run: |
+        docker-compose up --build -d
+        docker-compose ps
+
+    # Step 4: Wait for Application to be Ready
+    - name: Wait for the application to be ready
+      run: |
+        until curl -s http://localhost:8090 > /dev/null; do
+          echo "Waiting for app to be ready..."
+          sleep 5
+        done
+        echo "App is ready!"
+
+    # Step 5: Run Cypress Tests
+    - name: Run Cypress tests
+      run: |
+        npm ci
+        cd cypress/e2e
+        npx cypress run --record
+      env:
+        CYPRESS_BASE_URL: http://localhost:8090
+
+    # Step 6: Tear Down Docker Containers
+    - name: Stop Docker containers
+      if: always()
+      run: docker-compose down
