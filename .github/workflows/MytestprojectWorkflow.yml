@@ -1,71 +1,51 @@
-name: Run Cypress Tests on the Hosted Docker Application
+name: Run Cypress Tests in Docker
 
 on:
-  # i want to manually trigger the workflow
   workflow_dispatch:
 
 jobs:
   cypress-tests:
     runs-on: ubuntu-latest
 
-    services:
-      docker:
-        image: docker:20.10.24
-        options: >-
-          --privileged
-          --group-add docker
-        ports:
-          - 8090:8090 # Application port
-        env:
-          DOCKER_BUILDKIT: 1
-        volumes:
-          - /var/run/docker.sock:/var/run/docker.sock
-
     steps:
-    # Step 1: Checkout Code
-    - name: Checkout Project Repository
+    # Step 1: Checkout code
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    # Step 2: Set up Node.js for Cypress
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
+    # Step 2: Set up Docker
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
 
-    - name: Install Dependencies
-      run: npm install   
-
-    # Step 3: Add Docker Group (fix for missing group error)
-    - name: Add docker group to the container
+    # Step 3: Build and run the Docker app
+    - name: Build and run Docker app
       run: |
-        sudo groupadd docker || true
-        sudo usermod -aG docker $USER  
+        # Change to the app directory
+        cd /challenge
 
-    # Step 4: Build and Run the Docker Containers
-    - name: Build and start Docker containers
-      run: |
-        docker-compose up --build -d
-        docker-compose ps
+        # Build and run the Docker container (change the Dockerfile path if needed)
+        docker build -t your-app .
+        docker run -d -p 8090:8090 --name your-app-container your-app
 
-    # Step 5: Wait for Application to be Ready
-    - name: Wait for the application to be ready
-      run: |
+        # Wait for the app to be ready
         until curl -s http://localhost:8090 > /dev/null; do
           echo "Waiting for app to be ready..."
           sleep 5
         done
         echo "App is ready!"
 
-    # Step 6: Run Cypress Tests
+    # Step 4: Run Cypress tests
     - name: Run Cypress tests
       run: |
+        /cypress/e2e
         npm ci
-        cd cypress/e2e
-        npx cypress run --record
+        npx cypress run
       env:
         CYPRESS_BASE_URL: http://localhost:8090
 
-    # Step 7: Tear Down Docker Containers
+
+    # Step 5: Tear down Docker containers
     - name: Stop Docker containers
       if: always()
-      run: docker-compose down
+      run: |
+        docker stop your-app-container
+        docker rm your-app-container
