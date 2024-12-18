@@ -1,7 +1,7 @@
 class UploadDocumentPage {
   elements = {
-    FileInput: () => cy.get('input[id="fileInput"]'), //making elements in the class so that they are accessible by all fucnitons
-    uploadButton: () => cy.get("#uploadButton"),
+    FileInput: () => cy.get('input[type="file"]'), //making elements in the class so that they are accessible by all fucnitons
+    uploadButton: () => cy.get("div.flex.items-center.space-x-2 input"),
   };
 
   uploadDoc(files) {
@@ -18,7 +18,11 @@ class UploadDocumentPage {
   }
 
   uploadButton() {
-    this.elements.uploadButton().click();
+    this.elements.uploadButton().then(($btn)=>{
+
+      click();
+
+    })
 
     cy.get('label[for="fileInput"]').then(($label) => {
       if ($label.text().includes("file(s) selected")) {
