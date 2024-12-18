@@ -1,0 +1,23 @@
+{
+  "name": "myproject1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZahraN444/MyCypressProject.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ZahraN444/MyCypressProject/issues"
+  },
+  "homepage": "https://github.com/ZahraN444/MyCypressProject#readme",
+  "description": "",
+  "devDependencies": {
+    "cypress": "^13.17.0",
+    "cypress-file-upload": "^5.0.8"
+  }
+}
