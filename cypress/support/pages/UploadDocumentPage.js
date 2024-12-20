@@ -1,10 +1,20 @@
 class UploadDocumentPage {
   elements = {
     FileInput: () => cy.get('input[type="file"]'), //making elements in the class so that they are accessible by all fucnitons
-    uploadButton: () => cy.get("div.flex.items-center.space-x-2 input"),
+    uploadButton: () => cy.get("svg.lucide.lucide-upload"),
+    processButton: () => cy.get("svg.lucide.lucide-play"),
+    processStatus: () => cy.get("div.space-y-2 div.bg-secondary div.inline-flex"),
+    deleteIcon: () => cy.get("svg.lucide.lucide-trash2"),
   };
 
   uploadDoc(files) {
+
+    this.elements.uploadButton().should(
+      "have.css",
+      "pointer-events",
+      "none"
+    );                             //check upload button is disabled initially
+
     const filesForUpload = Array.isArray(files) ? files : [files]; //check if files is a signle object or array
 
     const fileUploads = filesForUpload.map(({ fileName, fileType }) => ({
@@ -13,36 +23,52 @@ class UploadDocumentPage {
       mimeType: fileType,
     }));
 
-    // Attach all files to the same input
-    return this.elements.FileInput().should("exist").attachFile(fileUploads);
+
+    // Attach file/files to the same input
+    this.elements.FileInput().should("exist").attachFile(fileUploads);  //attach file
+
+    this.elements.uploadButton().click(); //click to upload
+
+    
   }
 
-  uploadButton() {
-    this.elements.uploadButton().then(($btn)=>{
+  processFile() {
+    this.elements.processStatus().then(($status) => {
+      // Extract the text content
 
-      click();
-
-    })
-
-    cy.get('label[for="fileInput"]').then(($label) => {
-      if ($label.text().includes("file(s) selected")) {
-        //this checks if any file is attached or not
-        cy.get("#popupMessage")
-          .should("be.visible")
-          .then(($msg) => {
-            cy.wrap($msg).should("have.text", "File is being processed..."); // Confirm the text to ensure file upload is in progress
-          });
-
-        //Here I want to intercept the successful network call to assert that file uploaded successfully but I am unable to because application isnt working till that point
-      } else {
-        cy.on("window:alert", (alertText) => {
-          //if no file is attached then throws error
-          // Assert the alert message text
-          expect(alertText).to.equal("Please select files to upload.");
+      cy.wrap($status)
+        .invoke("text")
+        .then(($text) => {
+          expect($text).to.equal("Unprocessed"); // Assert the text is unporcessed initially
         });
-      }
+
+      cy.intercept('POST', 'http://localhost:8000/documents/process/*').as(
+        'process');
+
+      this.elements.processButton().click();  //user clicks on the process button
+
+     cy.wait('@process').its('response.statusCode').should('eq', 200);  //waits for call to be successful
+
+      cy.wrap($status)
+        .invoke("text")
+        .then((text) => {
+          expect(text.trim()).to.equal('Processed'); // Assert the text has changed to Processed.
+        });
     });
+  }
+
+  deleteFile() {
+
+    cy.intercept('DELETE', 'http://localhost:8000/documents/*').as(
+      'delete'
+    );  //intercept the delete call
+    this.elements.deleteIcon().click();   //click on the delete button
+
+    cy.wait('@delete').its('response.statusCode').should('eq', 200);  //wait for the call to complete successfully
+ 
+    cy.get('div.lucide.lucide-file').should('not.exist');  // assert that the file should be deleted
+
   }
 }
 
-export const uploadDocument = new UploadDocumentPage();
+export const uploadDocument = new UploadDocumentPage();  //create instance of class

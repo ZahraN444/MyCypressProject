@@ -1,0 +1,18 @@
+{
+    "questions": [
+      {
+        "question": "What are galaxies made of?",
+        "expectedRegex": "^Galaxies are made of stars,\\s?gas,\\s?dust,\\s?dark matter\\.$"
+      },
+      {
+        "question":"What is at the core of many galaxies?",
+        "expectedRegex":"^A,\\s?supermassive,\\s?black,\\s?hole."
+
+      },
+      {
+        "question":"What are the three main types of galaxies?",
+        "expectedRegex":"^Spiral,\\s?elliptical,\\s?irregular"
+      }
+    ]
+  }
+  
