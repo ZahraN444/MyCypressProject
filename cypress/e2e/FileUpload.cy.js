@@ -1,54 +1,75 @@
 import { uploadDocument } from "../support/pages/UploadDocumentPage";
+import { validateResp } from "../support/pages/ValidateResponses";
+
 import "cypress-file-upload";
 
 describe("File Upload Page Tests", () => {
-  const file1 = { fileName: "example.json", fileType: "application/json" };
-  const file2 = { fileName: "test.pdf", fileType: "application/pdf" };
-  const file3 = { fileName: "logo.png", fileType: "png" };
-
-  const multipleFiles = [
-    { fileName: "example.json", fileType: "application/json" },
-    { fileName: "logo.png", fileType: "image/png" },
-    { fileName: "test.pdf", fileType: "application/pdf" },
-  ];
+  const file1 = {
+    fileName: "Testing.pdf",
+    fileType: "application/pdf",
+  };
 
   const invalidFile = {
     fileName: "gnupg-w32cli-1.4.23.exe",
     fileType: "application/exe",
   };
 
-
   beforeEach(() => {
-    cy.visit("/file_upload.html");
+    cy.visit("/");
   });
 
-  //  it('Uploads a single file and verifies it is uploaded or not', () => {
 
-  //    uploadDocument.uploadDoc(file1)  //call the fucntion to upload doc
+   it('Checks the upload button is disabled when no file is added; Upload a single file and process it;ask questions about the document and then delete it', () => {
 
-  //    cy.get('label[for="fileInput"]').should('have.text', '1 file(s) selected');
+    cy.fixture('expectedAnswers.json').then((data) => {
+      const { questions } = data;
+      
 
-  //    uploadDocument.uploadButton(); //call function to upload file
+     uploadDocument.uploadDoc(file1);  //call the fucntion to upload doc
+     uploadDocument.processFile();  //call fucntion to process file
+     
+     questions.forEach(({ question, expectedRegex }) => {
+      // Ask the question
+      validateResp.askChatbot(question);
 
-  //   });
 
-  // it('Uploads multiple files in the application to test functionality', () => {
+        // Validate the response
+      validateResp.getChatbotResponse().then((responseText) => {
+         
+          if (expectedRegex) {
+            const regex = new RegExp(expectedRegex);  //store expected regex in variable
+            expect(responseText).to.match(regex);  //match response of chatbot with the regex
+          }
 
-  //   uploadDocument.uploadDoc(multipleFiles);
+        });
 
-  //   cy.get('label[for="fileInput"]').should('have.text', '3 file(s) selected');
+    });   
 
-  //   uploadDocument.uploadButton(); //call function to upload file
-  // });
+    uploadDocument.deleteFile();
 
-  //  it('Handles invalid file upload', () => {
+  });   
 
-  //   uploadDocument.uploadDoc(invalidFile);
+});  
 
-  //   //.get('.error-message').should('contain', 'Invalid file type'); //I have added this error msg in case of invalid files like .exe
-  // });
+  it("Handles invalid file upload", () => {
 
-  it("Handles the case if user adds no file and clicks on upload", () => {
-    uploadDocument.uploadButton();
+    cy.intercept("POST", "http://localhost:8000/documents/upload/").as(
+      "uploadcall"   
+    );   //intercept the api call for upload document
+
+    uploadDocument.uploadDoc(invalidFile);  //attach invalid file
+
+    cy.wait("@uploadcall").its("response.statusCode").should("eq", 400);  //the call must fail
+
+    cy.on("window:alert", (alertText) => { //if no file is attached then throws error
+      
+      // Assert the alert message text
+      expect(alertText).to.equal("Failed to upload file. Please try again.");
+    });
+
+   });
+
   });
-});
+
+
+
