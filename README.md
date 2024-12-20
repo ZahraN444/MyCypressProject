@@ -1,16 +1,16 @@
 # MyCypressProject
-My github project contains my cypress tests in a file fileUpload.cy.js
-Testing data is added in the fixtures folder
-Run the github action which contains workflow to run tests on the Docker application
-By default baseUrl is set to localhost:8000/
+* My github project contains my cypress tests in a file fileUpload.cy.js
+* Testing data is added in the fixtures folder
+* Run the github action which contains workflow to run tests on the Docker application
+* By default baseUrl is set to localhost:8000/
 
 What this project does is:
-It checks first that the upload button is disabled.
-It uploads and tests with invalid file and then deletes the file
-It uploads and tests with a valid test file, uploads it and verifies the call is successful.
-It then clicks on process button to process the file, this call is failing mostly throwing 500.
-It asks questions from chatbot, using the expectedAnswers file in fixtures folder and validates teh responses based on comapring regex.
-Finally it clicks on delete to delete the file. 
+* It checks first that the upload button is disabled.
+* It uploads and tests with invalid file and then deletes the file
+* It uploads and tests with a valid test file, uploads it and verifies the call is successful.
+* It then clicks on process button to process the file, this call is failing mostly throwing 500.
+* It asks questions from chatbot, using the expectedAnswers file in fixtures folder and validates teh responses based on comapring regex.
+* Finally it clicks on delete to delete the file. 
 
 
 # Issues in Project

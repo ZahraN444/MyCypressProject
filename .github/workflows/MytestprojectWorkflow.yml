@@ -1,0 +1,51 @@
+name: Run Cypress Tests in Docker
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cypress-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Set up Docker
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    # Step 3: Build and run the Docker app
+    - name: Build and run Docker app
+      run: |
+        # Change to the app directory
+        cd /challenge
+
+        # Build and run the Docker container (change the Dockerfile path if needed)
+        docker build -t your-app .
+        docker run -d -p 8000:8000 --name your-app-container your-app
+
+        # Wait for the app to be ready
+        until curl -s http://localhost:8000 > /dev/null; do
+          echo "Waiting for app to be ready..."
+          sleep 5
+        done
+        echo "App is ready!"
+
+    # Step 4: Run Cypress tests
+    - name: Run Cypress tests
+      run: |
+        /cypress/e2e
+        npm ci
+        npx cypress run
+      env:
+        CYPRESS_BASE_URL: http://localhost:8000
+
+
+    # Step 5: Tear down Docker containers
+    - name: Stop Docker containers
+      if: always()
+      run: |
+        docker stop your-app-container
+        docker rm your-app-container
