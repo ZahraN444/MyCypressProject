@@ -24,10 +24,10 @@ jobs:
 
         # Build and run the Docker container (change the Dockerfile path if needed)
         docker build -t your-app .
-        docker run -d -p 8090:8090 --name your-app-container your-app
+        docker run -d -p 8000:8000 --name your-app-container your-app
 
         # Wait for the app to be ready
-        until curl -s http://localhost:8090 > /dev/null; do
+        until curl -s http://localhost:8000 > /dev/null; do
           echo "Waiting for app to be ready..."
           sleep 5
         done
@@ -40,7 +40,7 @@ jobs:
         npm ci
         npx cypress run
       env:
-        CYPRESS_BASE_URL: http://localhost:8090
+        CYPRESS_BASE_URL: http://localhost:8000
 
 
     # Step 5: Tear down Docker containers
